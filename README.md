@@ -1,4 +1,4 @@
-# roblox hwid spoofer (c++)
+# roblox hwid spoofer
 
 simple c++ program to spoof 2/4 hardware identifiers allegedly collected by roblox, based on findings from a public reverse engineering forum thread.
 
