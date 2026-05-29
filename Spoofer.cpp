@@ -248,7 +248,7 @@ std::wstring Spoofer::GenerateMacAddress(BOOL isMulticast, BOOL isLocallyAdminis
 	return wss.str() + this->GetRandomHexByteString(5);
 }
 
-void Spoofer::ChangeMacRegistry() {
+void Spoofer::SpoofMacRegistry() {
 	const wchar_t *networkAdaptersPath = L"SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e972-e325-11ce-bfc1-08002be10318}";
 	HKEY hNetworkAdapters;
 
@@ -373,7 +373,7 @@ void Spoofer::ErrorWithMessageFormatted(const wchar_t *format, ...) {
 	Spoofer::PauseExit();
 }
 
-void Spoofer::ChangeEDIDRegistry() {
+void Spoofer::SpoofEDIDRegistry() {
 	const wchar_t *displayPath = L"SYSTEM\\CurrentControlSet\\Enum\\DISPLAY";
 	HKEY hDisplays;
 
@@ -593,9 +593,9 @@ void Spoofer::SpoofAll() {
 
 	this->DeleteRobloxRegistry();
 	
-	this->ChangeEDIDRegistry();
+	this->SpoofEDIDRegistry();
 	
-	this->ChangeMacRegistry();
+	this->SpoofMacRegistry();
 
 	this->RestartNetworkAdapters();
 

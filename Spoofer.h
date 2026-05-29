@@ -36,9 +36,9 @@ public:
 		BOOL isLocallyAdministered = TRUE
 	);
 
-	void ChangeMacRegistry();
+	void SpoofMacRegistry();
 
-	void ChangeEDIDRegistry();
+	void SpoofEDIDRegistry();
 	
 	[[noreturn]] static void PauseExit();
 	
