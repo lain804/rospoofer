@@ -32,7 +32,7 @@ public:
 	static void RestartNetworkAdapters();
 
 	std::wstring GenerateMacAddress(
-		BOOL isUnicast = TRUE, 
+		BOOL isMulticast = FALSE, 
 		BOOL isLocallyAdministered = TRUE
 	);
 

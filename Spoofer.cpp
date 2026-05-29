@@ -175,11 +175,11 @@ void Spoofer::DeleteRobloxRegistry() {
 			if (NT_SUCCESS(ok)) {
 				printf("Successfully Deleted HKCU\\System\\CurrentControlSet\\Control\\0SystemReg\n");
 			}
-			else if (ok != STATUS_OBJECT_NAME_NOT_FOUND) {
-				printf("Failed to delete HKCU\\System\\CurrentControlSet\\Control\\0SystemReg: 0x%X\n", ok);
+			else if (ok == STATUS_OBJECT_NAME_NOT_FOUND) {
+				printf("HKCU\\System\\CurrentControlSet\\Control\\0SystemReg not found\n");
 			}
 			else {
-				printf("HKCU\\System\\CurrentControlSet\\Control\\0SystemReg not found\n");
+				printf("Failed to delete HKCU\\System\\CurrentControlSet\\Control\\0SystemReg: 0x%X\n", ok);
 			}
 
 		}
@@ -232,14 +232,14 @@ void Spoofer::RestartNetworkAdapters() {
 }
 
 // when it comes to WIFI network adapters, windows only lets you assign a mac address that has the isLocallyAdministered bit set
-std::wstring Spoofer::GenerateMacAddress(BOOL isUnicast, BOOL isLocallyAdministered) {
-	int preset = (isLocallyAdministered << 1) | ((~isUnicast) & 1);
+std::wstring Spoofer::GenerateMacAddress(BOOL isMulticast, BOOL isLocallyAdministered) {
+	int preset = (isLocallyAdministered << 1) | isMulticast;
 	int firstByte = this->GetRandomNumber<int>(0, 0xFF);
 	
 	// clear 2 lsb
 	firstByte &= ~0b11;
 	
-	// apply isUnicast and isLocallyAdministered
+	// apply isMulticast and isLocallyAdministered
 	firstByte |= preset;
 
 	std::wstringstream wss;
