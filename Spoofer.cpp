@@ -1,3 +1,4 @@
+#define NOMINMAX
 #include <Windows.h>
 #include <string>
 #include <sstream>
@@ -18,6 +19,8 @@
 #include "ntapi.h"
 
 namespace fs = std::filesystem;
+
+#define BASEBOARD_SERIAL_LENGTH 16
 
 std::mt19937_64 Spoofer::InitializeEngineWithGeneratedSeedSequence(size_t seedsCount) {
 	if (seedsCount > 624) {
@@ -108,7 +111,7 @@ void Spoofer::TerminateAllRobloxInstances() {
 	while (ok) {
 		if (wcscmp(pe.szExeFile, L"RobloxPlayerBeta.exe") == 0) {
 			HANDLE hRoblox = OpenProcess(PROCESS_TERMINATE | SYNCHRONIZE, FALSE, pe.th32ProcessID);
-			if (hRoblox != INVALID_HANDLE_VALUE) {
+			if (hRoblox) {
 				TerminateProcess(hRoblox, NULL);
 				WaitForSingleObject(hRoblox, INFINITE);
 				CloseHandle(hRoblox);
@@ -586,18 +589,76 @@ void Spoofer::SpoofEDIDRegistry() {
 	printf("Successfully Set New EDID for all monitors\n");
 }
 
-void Spoofer::SpoofAll() {
-	this->TerminateAllRobloxInstances();
+void Spoofer::SpoofSMBIOSSystemUUID() {
+	std::string command = "AMIDEWINx64.EXE /SU";
 
-	std::thread t(this->DeleteRobloxAccountData);
+	std::wstring uuid = this->GetRandomHexByteString(16);
+
+	command += " ";
+
+	command += std::string(uuid.begin(), uuid.end());
+
+	command += " >nul";
+
+	int OK = system(command.c_str());
+	if (OK == 0) {
+		printf("System UUID spoofed successfully\n");
+	}
+	else {
+		printf("Failed to spoof System UUID: %d\n", OK);
+	}
+}
+
+void Spoofer::SpoofSMBIOSBaseboardSerial() {
+	std::string command = "AMIDEWINx64.EXE /BS";
+	command += " ";
+	for (int i = 0; i < BASEBOARD_SERIAL_LENGTH; ++i) {
+		command += std::to_string(this->GetRandomNumber<int>(0,9));
+	}
+	command += " ";
+	command += ">nul";
+	int OK = system(command.c_str());
+	if (OK == 0) {
+		printf("Baseboard serial spoofed successfully\n");
+	}
+	else {
+		printf("Failed to spoof Baseboard serial: %d\n", OK);
+	}
+}
+
+void Spoofer::RestartWinMgmtService() {
+	int OK = system("powershell -NoProfile -Command \"Restart-Service winmgmt -Force > $null\"");
+	if (OK == 0) {
+		printf("winmgmt restarted successfully\n");
+	}
+	else {
+		printf("failed to restart winmgmt: %d\n", OK);
+	}
+}
+
+void Spoofer::SpoofAll() {
+	Spoofer::TerminateAllRobloxInstances();
+
+	std::vector<std::thread> threads;
+
+	threads.emplace_back(Spoofer::DeleteRobloxAccountData);
+	this->SpoofMacRegistry();
+	threads.emplace_back(Spoofer::RestartNetworkAdapters);
 
 	this->DeleteRobloxRegistry();
-	
 	this->SpoofEDIDRegistry();
-	
-	this->SpoofMacRegistry();
 
-	this->RestartNetworkAdapters();
+	this->SpoofSMBIOSSystemUUID();
+	this->SpoofSMBIOSBaseboardSerial();
 
-	t.join();
+	for (auto &thread : threads) {
+		if (thread.joinable()) {
+			thread.join();
+		}
+	}
+
+	threads.clear();
+
+	// this takes some time too but we cannot put it in threads because it messes up restarting network adapters
+	Spoofer::RestartWinMgmtService();
 }

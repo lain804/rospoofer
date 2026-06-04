@@ -1,3 +1,4 @@
+#define NOMINMAX
 #include "Spoofer.h"
 #include <Windows.h>
 

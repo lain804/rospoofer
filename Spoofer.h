@@ -1,8 +1,10 @@
 #pragma once
 
+#define NOMINMAX
 #include <Windows.h>
 #include <random>
 #include <string>
+#include <limits>
 
 class Spoofer {
 private:
@@ -16,10 +18,14 @@ public:
 	void SpoofAll();
 
 	template <typename T>
-	T GetRandomNumber(T min, T max);
+	T GetRandomNumber(
+		T min = std::numeric_limits<T>::lowest(),
+		T max = std::numeric_limits<T>::max()
+	);
 
-	static void DeleteRobloxAccountData();
 	static void TerminateAllRobloxInstances();
+	static void DeleteRobloxAccountData();
+	static void RestartWinMgmtService();
 
 	std::wstring GetRandomHexByteString(
 		size_t byteCount,
@@ -40,6 +46,10 @@ public:
 
 	void SpoofEDIDRegistry();
 	
+	void SpoofSMBIOSSystemUUID();
+
+	void SpoofSMBIOSBaseboardSerial();
+
 	[[noreturn]] static void PauseExit();
 	
 	[[noreturn]] static void ErrorWithMessageFormatted(const char *format, ...);
