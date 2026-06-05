@@ -7,13 +7,17 @@ Features:
 Terminate Active Roblox Instances
 
 Delete Hidden Roblox-Specific Registry Entry \0SystemReg
+
 Delete Roblox Account Data and Traces
 
 Alter Monitor EDID values in registry
 
 Alter MAC addresses in registry
+
 Restart All Network Adapters to apply Mac changes
 
 Alter System UUID inside SMBIOS tables
+
 Alter Baseboard serial inside SMBIOS tables
+
 Restart winmgmt to flush wmi cache
