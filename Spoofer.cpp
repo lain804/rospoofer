@@ -639,26 +639,16 @@ void Spoofer::RestartWinMgmtService() {
 void Spoofer::SpoofAll() {
 	Spoofer::TerminateAllRobloxInstances();
 
-	std::vector<std::thread> threads;
-
-	threads.emplace_back(Spoofer::DeleteRobloxAccountData);
-	this->SpoofMacRegistry();
-	threads.emplace_back(Spoofer::RestartNetworkAdapters);
-
+	Spoofer::DeleteRobloxAccountData();
 	this->DeleteRobloxRegistry();
 	this->SpoofEDIDRegistry();
 
 	this->SpoofSMBIOSSystemUUID();
 	this->SpoofSMBIOSBaseboardSerial();
 
-	for (auto &thread : threads) {
-		if (thread.joinable()) {
-			thread.join();
-		}
-	}
-
-	threads.clear();
-
 	// this takes some time too but we cannot put it in threads because it messes up restarting network adapters
 	Spoofer::RestartWinMgmtService();
+
+	this->SpoofMacRegistry();
+	Spoofer::RestartNetworkAdapters();
 }
