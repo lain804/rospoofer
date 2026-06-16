@@ -21,6 +21,7 @@
 namespace fs = std::filesystem;
 
 #define BASEBOARD_SERIAL_LENGTH 16
+#define DELETE_DATA_RETRY_DELAY_MS 100
 
 std::mt19937_64 Spoofer::InitializeEngineWithGeneratedSeedSequence(size_t seedsCount) {
 	if (seedsCount > 624) {
@@ -89,9 +90,9 @@ void Spoofer::DeleteRobloxAccountData() {
 			break;
 		}
 		else if (ec.value() != ERROR_SHARING_VIOLATION) {
-			Spoofer::ErrorWithMessageFormatted("Recursive delete thrown unknown exception\n");
+			Spoofer::ErrorWithMessageFormatted("Recursive delete threw unknown exception\n");
 		}
-		Sleep(1);
+		Sleep(DELETE_DATA_RETRY_DELAY_MS);
 	}
 
 	printf("Successfully Deleted Roblox Account Data\n");
@@ -517,46 +518,16 @@ void Spoofer::SpoofEDIDRegistry() {
 				}
 			}
 
-			/*
-			wprintf(L"EDID for monitor %s/%s is:\n", monitorIdBuffer, monitorSubDeviceNameBuffer);
-			for (BYTE byte : EDID) {
-				printf("%02X ",byte);
-			}
-			printf("\n");
-			
-
-			uint8_t oldChecksum = std::accumulate(EDID.begin(), EDID.end(), 0);
-			*/
-
-			//printf("Monitor Serial Number from EDID: ");
 			for (int i = 12; i <= 15; ++i) {
-				//printf("%02X ", EDID[i]);
 				EDID[i] = this->GetRandomNumber<int>(0, 0xFF);
 			}
-			//printf("\n");
-
-			/*
-			
-			printf("New EDID: ");
-			for (int i = 12; i <= 15; ++i) {
-				printf("%02X ", EDID[i]);
-			}
-			printf("\n");
-
-			printf("Initial Checksum: %d\n", oldChecksum);
-			*/
 
 			uint8_t newChecksum = std::accumulate(EDID.begin(), EDID.end(), 0);
-			
-			//printf("Modified serial Checksum: %d\n", newChecksum);
 			
 			// need 256 to actually wrap around
 			uint8_t missing = 0xFF + 1 - newChecksum;
 
 			EDID.back() += missing;
-
-			//uint8_t fixedChecksum = std::accumulate(EDID.begin(), EDID.end(), 0);
-			//printf("Fixed serial Checksum: %d\n", fixedChecksum);
 
 			{
 				LSTATUS ok = RegSetValueExW(
@@ -639,14 +610,16 @@ void Spoofer::RestartWinMgmtService() {
 void Spoofer::SpoofAll() {
 	Spoofer::TerminateAllRobloxInstances();
 
+	// comment this out if you want to compile for soft spoofer instead of hard spoofer
 	Spoofer::DeleteRobloxAccountData();
+
 	this->DeleteRobloxRegistry();
 	this->SpoofEDIDRegistry();
 
 	this->SpoofSMBIOSSystemUUID();
 	this->SpoofSMBIOSBaseboardSerial();
 
-	// this takes some time too but we cannot put it in threads because it messes up restarting network adapters
+	// this takes some time too but we cannot put it in a thread because it messes up restarting network adapters
 	Spoofer::RestartWinMgmtService();
 
 	this->SpoofMacRegistry();
